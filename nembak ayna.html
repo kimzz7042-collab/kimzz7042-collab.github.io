@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nembak Romantis ❤️</title>
+  <style>
+    :root{
+      --bg1:#ff9a9e; --bg2:#fecfef; --accent:#ff4d6d; --glass: rgba(255,255,255,0.12);
+      --card:#ffffff; --soft:#fff0f4;
+      --font-sans: 'Segoe UI', Roboto, Arial, sans-serif;
+    }
+    html,body{height:100%;margin:0;font-family:var(--font-sans);}
+    body{
+      background: radial-gradient(60% 60% at 10% 10%, var(--bg2), transparent 10%),
+                  linear-gradient(135deg,var(--bg1),#ffd1dc 40%);
+      overflow:hidden; display:flex; align-items:center; justify-content:center;
+      color:#3b0a17;
+    }
+    .scene{
+      width:92%; max-width:980px; height:80vh; border-radius:20px; position:relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.12);
+      padding:28px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      backdrop-filter: blur(6px);
+      display:grid; grid-template-columns: 1fr 360px; gap:20px; align-items:center;
+    }
+
+    /* left: big romantic card */
+    .card{
+      padding:28px; border-radius:16px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12); position:relative; overflow:hidden;
+    }
+    h1{font-size:38px;margin:0 0 10px 0;letter-spacing:1px}
+    p.lead{margin:0 0 18px 0;font-size:16px;opacity:0.95}
+
+    /* typewriter message */
+    .loveMessage{
+      font-size:20px; line-height:1.6; min-height:110px; white-space:pre-wrap; font-weight:600;
+    }
+
+    /* right column: panel */
+    .panel{ padding:20px; border-radius:14px; background:linear-gradient(180deg,var(--soft), rgba(255,255,255,0.06));
+      box-shadow: 0 6px 24px rgba(0,0,0,0.09); text-align:center;}
+    .avatar{width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#fff,#ffd9e6);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:36px;color:#b52b47}
+    .btn{
+      display:inline-block;padding:12px 20px;border-radius:999px;background:linear-gradient(90deg,var(--accent),#ff7b9a);color:white;text-decoration:none;font-weight:700;cursor:pointer;border:none;box-shadow:0 8px 18px rgba(255,77,109,0.24);
+    }
+    .small{font-size:13px;opacity:0.9}
+
+    /* floating hearts */
+    .hearts{position:absolute;inset:0;pointer-events:none}
+    .heart{position:absolute;width:28px;height:28px;transform:translate(-50%,-50%);opacity:0.95}
+
+    /* modal */
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,6,8,0.45);backdrop-filter: blur(2px);opacity:0;pointer-events:none;transition:opacity .28s}
+    .modal.show{opacity:1;pointer-events:auto}
+    .dialog{width:92%;max-width:520px;background:linear-gradient(180deg,#fff,#fff8fb);padding:28px;border-radius:14px;box-shadow:0 30px 70px rgba(0,0,0,0.25);text-align:center}
+    .dialog h2{margin:0 0 12px 0}
+    .choices{display:flex;gap:12px;justify-content:center;margin-top:18px}
+    .no{background:#eee;color:#333;border-radius:12px;padding:10px 16px}
+
+    /* confetti canvas */
+    #confetti { position: absolute; inset:0; pointer-events:none }
+
+    /* little sparkles */
+    .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:white;opacity:0.9;filter:blur(.6px)}
+
+    footer.note{position:absolute;right:18px;bottom:12px;font-size:12px;opacity:0.8}
+
+    @media(max-width:880px){.scene{grid-template-columns:1fr;grid-auto-rows:1fr 1fr;height:auto;padding:18px}
+      .panel{order:2}}
+  </style>
+</head>
+<body>
+  <div class="scene" role="main">
+    <canvas id="confetti"></canvas>
+    <div class="card" aria-live="polite">
+      <h1>Untukmu, Sayang ❤️</h1>
+      <p class="lead">Seorang yang sangat spesial sedang membaca ini. Ssst... ada yang mau bertanya.</p>
+      <div class="loveMessage" id="typewriter"></div>
+
+      <div style="margin-top:22px;display:flex;gap:12px;align-items:center">
+        <button class="btn" id="openBtn" style="background:linear-gradient(90deg,#ffd1e3,#ff9aa8)">Buka Pesan</button>
+        <div style="margin-left:auto;text-align:right">
+          <div class="small">Tanggal spesial: <strong id="dateSpecial"></strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="avatar" id="avatar">💌</div>
+      <h3>Apakah kamu mau jadi pacarku?</h3>
+      <p class="small">Klik tombol di bawah jika sudah siap jawab...</p>
+      <div style="margin-top:18px">
+        <button class="btn" id="askBtn">Jawab Sekarang</button>
+      </div>
+
+      <p style="margin-top:18px;font-size:13px;opacity:0.9"></p>
+    </div>
+
+    <div class="hearts" id="heartsContainer" aria-hidden="true"></div>
+    <footer class="note">Dibuat dengan ❤️ untuk momen spesial</footer>
+  </div>
+
+  <!-- modal -->
+  <div class="modal" id="modal">
+    <div class="dialog">
+      <h2>Maafkan aku kalau terlalu cepat...</h2>
+      <p style="margin:8px 0 0 0">Tapi aku nggak mau menunggu lebih lama lagi.</p>
+      <p style="font-weight:800;font-size:20px;margin-top:12px">Maukah kamu jadi pacarku?</p>
+      <div class="choices">
+        <button class="btn" id="yes">Iya, mau 💖</button>
+        <button class="no" id="no">Maaf, bukan untuk sekarang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- optional audio; replace src with your file name or URL -->
+  <audio id="romAudio" loop="loop" preload="auto">
+    <source src="https://feeldreams.github.io/maukahkamu/seandainya.mp3" type="audio/mpeg">
+    <!-- Jika ingin pakai file lokal, letakkan file mp3 di folder yang sama dengan HTML -->
+  </audio>
+
+  <script>
+    // =========== small helpers ===========
+    const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
+    const heartsContainer = document.getElementById('heartsContainer');
+
+    // generate floating hearts background
+    function makeHeart(x,y,size,delay){
+      const el = document.createElement('div');
+      el.className = 'heart';
+      el.style.left = (x||Math.random()*100)+'%';
+      el.style.top = (y||Math.random()*100)+'%';
+      el.style.width = (size||20)+'px';
+      el.style.height = (size||20)+'px';
+      el.innerHTML = `
+        <svg viewBox="0 0 32 29.6" width="100%" height="100%" fill="none">
+          <path d="M23.6,0c-2.9,0-5.4,1.7-6.6,4.1C15.8,1.7,13.3,0,10.4,0C4.7,0,0,4.7,0,10.4c0,7.7,9.3,13.8,16,19.2c6.9-5.3,16-11.5,16-19.2C32,4.7,27.3,0,23.6,0z" fill="url(#g)" stroke="rgba(255,255,255,0.08)"/>
+          <defs>
+            <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.18"/><stop offset="1" stop-color="#ff7b9a" stop-opacity="0.9"/></linearGradient>
+          </defs>
+        </svg>`;
+      heartsContainer.appendChild(el);
+      el.animate([
+        { transform: 'translateY(0) scale(0.9)', opacity:0 },
+        { transform: 'translateY(-120px) scale(1.05)', opacity:1 },
+        { transform: 'translateY(-260px) scale(0.9)', opacity:0 }
+      ],{duration: 6000 + Math.random()*4000, delay: delay||0, iterations:1, easing:'cubic-bezier(.22,.9,.35,1)'}).onfinish = ()=> el.remove();
+    }
+
+    // spawn many hearts over time
+    setInterval(()=>{
+      for(let i=0;i<2;i++) makeHeart(Math.random()*100,100,14 + Math.random()*28);
+    },1200);
+
+    // =========== typewriter message ===========
+    const message = `Aku selalu tersenyum setiap kali mengingatmu.\n
+Kamu adalah lagu paling indah di hari-hariku.\n\n
+Jadi... maukah kamu menjadi pacarku?`;
+    const tw = document.getElementById('typewriter');
+    let idx=0;
+    function typeStep(){
+      if(idx<=message.length){
+        tw.textContent = message.slice(0,idx);
+        idx++;
+        setTimeout(typeStep, 35 + Math.random()*40);
+      }
+    }
+
+    // date special
+    const dateSpecial = document.getElementById('dateSpecial');
+    const d = new Date(); dateSpecial.textContent = d.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+    // buttons
+    const openBtn = document.getElementById('openBtn');
+    const askBtn = document.getElementById('askBtn');
+    const modal = document.getElementById('modal');
+    const yes = document.getElementById('yes');
+    const no = document.getElementById('no');
+    const playBtn = document.getElementById('playBtn');
+    const audio = document.getElementById('romAudio');
+
+    // ==== AUTOPLAY FIX ====
+
+// coba autoplay saat halaman load
+window.addEventListener("load", () => {
+  audio.volume = 1.0;
+  audio.play().then(() => {
+    playBtn.textContent = "Musik Diputar";
+  }).catch(() => {
+    // autoplay diblokir, nanti diputar setelah user klik tombol pertama
+  });
+});
+
+// play audio otomatis ketika user interaksi pertama
+function forcePlay() {
+  if (audio.paused) {
+    audio.play().then(() => {
+      playBtn.textContent = "Musik Diputar";
+    }).catch(()=>{});
+  }
+  // setelah berhasil, event listener ini dilepas
+  document.removeEventListener("click", forcePlay);
+  document.removeEventListener("touchstart", forcePlay);
+}
+
+document.addEventListener("click", forcePlay);
+document.addEventListener("touchstart", forcePlay);
+
+
+    openBtn.addEventListener('click', ()=>{
+      typeStep();
+      // gentle hearts shower
+      for(let i=0;i<12;i++) setTimeout(()=> makeHeart(Math.random()*100,90,18+Math.random()*28), i*120);
+    });
+
+    askBtn.addEventListener('click', ()=>{
+      modal.classList.add('show');
+      // focus on yes button for keyboard users
+      setTimeout(()=> yes.focus(), 250);
+    });
+
+    no.addEventListener('click', ()=>{
+      modal.classList.remove('show');
+      // sad little heart
+      makeHeart(50,70,40);
+    });
+
+    yes.addEventListener('click', ()=>{
+      modal.classList.remove('show');
+      celebrate(true);
+    });
+
+    // play music button
+    // playBtn.addEventListener('click', ()=>{
+     // if(audio.paused){
+       // audio.play().catch(e=>alert('Autoplay diblokir. Klik tombol play di pemutar untuk memutar musik.'));
+       // playBtn.textContent = 'Musik Diputar';
+      // } else {
+       // audio.pause(); playBtn.textContent = 'Putar Musik';
+      // }
+    // });
+
+    // =========== confetti / celebration ===========
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+    addEventListener('resize', resize); resize();
+
+    function random(min,max){return Math.random()*(max-min)+min}
+
+    function celebrate(big){
+      // hearts + confetti particles
+      const particles = [];
+      const heartParticles = [];
+      for(let i=0;i<120;i++) particles.push({x:random(0,canvas.width), y:random(-50,canvas.height/2), vx:random(-2,2), vy:random(1,5), size:random(4,9), life:random(80,160), color: `hsl(${random(330,360)},90%,60%)`});
+      for(let i=0;i<24;i++) heartParticles.push({x:canvas.width/2 + random(-120,120), y:canvas.height/2 + random(-80,80), s:random(18,42), a:random(0,Math.PI*2), vy:-random(1,3)});
+
+      let t = 0;
+      function frame(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        for(let p of particles){
+          p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.life--;
+          ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size*0.6);
+        }
+        // hearts
+        for(let h of heartParticles){
+          h.y += h.vy; h.a += 0.06; const x = h.x + Math.sin(h.a*2)*10; const y = h.y;
+          drawHeart(x,y,h.s);
+        }
+        t++;
+        if(t<220) requestAnimationFrame(frame);
+        else setTimeout(()=>ctx.clearRect(0,0,canvas.width,canvas.height), 400);
+      }
+      frame();
+
+      // floating big hearts DOM
+      for(let i=0;i<20;i++) setTimeout(()=> makeHeart(30+Math.random()*40,90,28+Math.random()*46), i*160);
+
+      // gentle pulse on avatar
+      const avatar = document.getElementById('avatar');
+      avatar.animate([{transform:'scale(1)'},{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:900,iterations:6});
+
+      // try playing audio
+      if(audio.paused) { audio.play().catch(()=>{}); playBtn.textContent='Musik Diputar'; }
+    }
+
+    function drawHeart(cx,cy,size){
+      ctx.save(); ctx.translate(cx,cy); ctx.scale(size/32,size/32);
+      ctx.beginPath(); ctx.moveTo(0,-6); ctx.bezierCurveTo(6,-22,32,-18,32,0); ctx.bezierCurveTo(32,18,16,28,0,40); ctx.bezierCurveTo(-16,28,-32,18,-32,0); ctx.bezierCurveTo(-32,-18,-6,-22,0,-6);
+      ctx.closePath(); ctx.fillStyle = 'rgba(255,100,130,0.95)'; ctx.fill(); ctx.restore();
+    }
+
+    // start small floating sparkles
+    for(let i=0;i<10;i++){
+      const s = document.createElement('div'); s.className='sparkle'; s.style.left=(10+i*9)+'%'; s.style.top=(20+Math.random()*35)+'%'; s.style.opacity=0.8; document.body.appendChild(s);
+      s.animate([{transform:'scale(.6)', opacity:0.2},{transform:'scale(1.2)', opacity:0.9},{transform:'scale(.8)', opacity:0.2}],{duration:1800+Math.random()*1600, iterations:Infinity, delay: i*120});
+    }
+
+    // keyboard accessibility: Esc closes modal
+    addEventListener('keydown', (e)=>{ if(e.key==='Escape') modal.classList.remove('show'); });
+
+    // initial gentle hearts
+    for(let i=0;i<8;i++) setTimeout(()=> makeHeart(Math.random()*100,90,18+Math.random()*28), i*180);
+  </script>
+  <script>
+  document.getElementById("yes").onclick = function () {
+    // Nomor WhatsApp kamu (format internasional tanpa +)
+    const phone = "6283135145974";
+
+    // Pesan otomatis
+    const message = "Aku mau jadi pacar kamu ❤️";
+
+    // URL WhatsApp
+    const waURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    // Buka WhatsApp
+    window.location.href = waURL;
+  };
+</script>
+
+</body>
+</html>
